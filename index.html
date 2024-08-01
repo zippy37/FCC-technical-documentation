@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <title>FGO Damage Calculation</title>
+  </head>
+  <body>
+    <nav id="navbar">
+      <header>FGO Damage Calculation</header>
+      <ul>
+        <li><a class="nav-link" href="#Introduction">Introduction</a></li>
+        <li><a class="nav-link" href="#The_Damage_Formula">The Damage Formula</a></li>
+        <li><a class="nav-link" href="#servantAtk">servantAtk</a></li>
+        <li><a class="nav-link" href="#npDamageMultiplier">npDamageMultiplier</a></li>
+        <li><a class="nav-link" href="#firstCardBonus">firstCardBonus</a></li>
+        <li><a class="nav-link" href="#cardDamageValue">cardDamageValue</a></li>
+        <li><a class="nav-link" href="#cardMod">cardMod</a></li>
+        <li><a class="nav-link" href="#classAtkBonus">classAtkBonus</a></li>
+        <li><a class="nav-link" href="#triangleModifier">triangleModifier</a></li>
+        <li><a class="nav-link" href="#attributeModifier">attributeModifier</a></li>
+        <li><a class="nav-link" href="#randomModifier">randomModifier</a></li>
+        <li><a class="nav-link" href="#atkMod">atkMod</a></li>
+        <li><a class="nav-link" href="#defMod">defMod</a></li>
+        <li><a class="nav-link" href="#criticalModifier">criticalModifier</a></li>
+        <li><a class="nav-link" href="#extraCardModifier">extraCardModifier</a></li>
+        <li><a class="nav-link" href="#specialDefMod">specialDefMod</a></li>
+        <li><a class="nav-link" href="#powerMod">powerMod</a></li>
+        <li><a class="nav-link" href="#selfDamageMod">selfDamageMod</a></li>
+        <li><a class="nav-link" href="#critDamageMod">critDamageMod</a></li>
+        <li><a class="nav-link" href="#isCrit">isCrit</a></li>
+        <li><a class="nav-link" href="#npDamageMod">npDamageMod</a></li>
+        <li><a class="nav-link" href="#isNP">isNP</a></li>
+        <li><a class="nav-link" href="#superEffectiveModifier">superEffectiveModifier</a></li>
+        <li><a class="nav-link" href="#isSuperEffective">isSuperEffective</a></li>
+        <li><a class="nav-link" href="#dmgPlusAdd">dmgPlusAdd</a></li>
+        <li><a class="nav-link" href="#selfDmgCutAdd">selfDmgCutAdd</a></li>
+        <li><a class="nav-link" href="#busterChainMod">busterChainMod</a></li>
+        <li><a class="nav-link" href="#Putting_It_All_Together">Putting It All Together</a></li>
+      </ul>
+    </nav>
+    <main id="main-doc">
+      <section class="main-section" id="Introduction">
+        <header>Introduction</header>
+        <p>FGO is a numbers game. Whether it's the gacha, the farming drop rates, or the damage numbers you see each turn of combat, it's all rooted in deep calculations. However, those numbers are not always intuitive. Take the following NP (Noble Phantasm) display text: </p><img class="wide_img" src="https://cdn.imgchest.com/files/w7pjc3rz6j7.png" alt="DmgScreenshot"></img><p>How exactly does the game calculate the number above? This page will describe the damage formula to showcase how every factor contributes to a servant's overall damage output, and also show the process of how to calculate these numbers for yourself.</p>
+      </section>
+      <section class="main-section" id="The_Damage_Formula">
+        <header>The Damage Formula</header>
+        <p>The damage formula is a big, intimidating expression that looks like this:<code>Card Damage = [servantAtk * npDamageMultiplier * (firstCardBonus + (cardDamageValue * (1 + cardMod))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)
+</code>That's... quite a lot. We'll break down each of these elements point by point. Thankfully, the only operations here are addition, subtraction, and multiplication, so our main concern is what each value represents. Each of the following sections will do just that. Also, for demonstrative purposes, a grailed Level 120 Asagami Fujino will be used as the example for our calculations. Feel free to use your own servant to follow along, but the values will be different.</p><img class="big_img" src="https://cdn.imgchest.com/files/l4necpaz364.png" alt="ServantCard"></img>
+      </section>
+      <section class="main-section" id="servantAtk">
+        <header>servantAtk</header>
+        <p>servantAtk, or Servant Attack, represents the number you see on a Servant's card. In our case, this is 16641. However, there are other factors that increase this further.<code>Card Damage = [<strong>18641</strong> * npDamageMultiplier * (firstCardBonus + (cardDamageValue * (1 + cardMod))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p><p>Factors that can increase this number include:
+        <li>Holy grails (increase level cap)</li>
+        <li>Gold and silver fous (up to +2000)</li><li>Equipped craft essence stats</li></p><p>In our case, we will assume she is equipping the craft essence <a href="https://fategrandorder.fandom.com/wiki/Cranking">First Day of Filming</a>, which has 2000 ATK. Therefore, our value becomes 18641.</p>
+      </section>
+      <section class="main-section" id="npDamageMultiplier">
+        <header>npDamageMultiplier</header>
+        <p>npDamageMultiplier is the overall NP strength multiplier. This is boosted by NP level and is a fixed number. NP buffs from strengthen quests and interludes boost this number. The values can be found in online databases such as <a href="https://fategrandorder.fandom.com/wiki/Asagami_Fujino">the Grand Order Wiki</a> in the "<img class="icon" src="https://static.wikia.nocookie.net/fategrandorder/images/f/f5/Powerup.png" alt="DmgIcon">Damage + " section. We will assume servants are fully boosted by any buffs received through quests. Our Servant's NP level is 4, this value will be 1150%, or 11.5.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (firstCardBonus + (cardDamageValue * (1 + cardMod))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="firstCardBonus">
+        <header>firstCardBonus</header>
+        <p>This value is 0.5 if first card is a Buster command card or the attack is part of a Mighty Chain. It is 0 in all other circumstances, including all NPs.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (cardDamageValue * (1 + cardMod))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="cardDamageValue">
+        <header>cardDamageValue</header>
+        <p>This is a percentage multiplier that corresponds to the following table:</p>
+<div class="table">
+<table class="table">
+<tr class="table_tr">
+<td class="table_td"></td>
+<td class="table_col">First</td>
+<td class="table_col">Second</td>
+<td class="table_col">Third</td>
+</tr><td class="table_buster">Buster</td>
+<td class="table_td">150%</td>
+<td class="table_td">180%</td>
+<td class="table_td">210%</td>
+</tr>
+<tr class="table_tr"><td class="table_arts">Arts</td>
+<td class="table_td">100%</td>
+<td class="table_td">120%</td>
+<td class="table_td">140%</td>
+</tr>
+<tr class="table_tr">
+<tr class="table_tr"><td class="table_quick">Quick</td>
+<td class="table_td">80%</td>
+<td class="table_td">96%</td>
+<td class="table_td">112%</td>
+</tr>
+</table>
+</div><p>Extra cards are treated as 100%. NPs are treated as first card of their color. For our example, the NP is Buster, so it has a value of 150% or x1.5. <code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + cardMod))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="cardMod">
+        <header>cardMod</header>
+        <p>Any buff that increases Buster/Arts/Quick/Extra performance. In our case, Fujino has a 35% Buster attack bonus on her first skill. In addition, the Craft Essence boosts it by another 8% (cardMod is 43% or 0.43).</p>
+          <li>Note that "Buster/Arts/Quick/Extra <strong>Damage</strong>" increases do <strong>NOT</strong> affect this.</li>
+        <p><code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * classAtkBonus * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code>
+        </p>
+      </section>
+      <section class="main-section" id="classAtkBonus">
+        <header>classAtkBonus</header>
+        <p>Each Servant class has a hidden modifier that directly impacts the base attack.</p>
+        <li>Caster/Assassin: <strong>0.9x</strong></li>
+        <li>Archer: <strong>0.95x</strong>
+        <li>Saber, Rider, Shielder, Alter Ego, Moon Cancer, Foreigner, Pretender, Beast: <strong>1.0x</strong></li>
+        <li>Lancer: <strong>1.05x</strong></li>
+        <li>Berserker, Ruler, Avenger: <strong>1.1x</strong></li>
+        <p>This modifier is why servants with identical stats but different classes will seem to perform differently. Casters and Assassins have a disadvantage compared to Berserkers and Avengers, for instance.
+          <code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * triangleModifier * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code>
+        </p>
+      </section>
+      <section class="main-section" id="triangleModifier">
+        <header>triangleModifier</header>
+        <p>Essentially class advantage effectiveness, this is based off the class affinity chart provided in the game.</p>
+        <img class="wide_img" src="https://cdn.imgchest.com/files/w7pjc3wxzo7.png" alt="ClassChart">
+        <p>Red arrows represent class advantage (2x). Blue arrows represent a class disadvantage (0.5x). If there is no arrow between classes, their relationship is neutral (1.0x). Berserkers, Pretenders, and Alter Egos do not have "true" class advantage so their modifier is only 1.5x.</p>
+        <p>For our example, we will assume the enemy is a Saber. Therefore, our modifier is 2.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * attributeModifier * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code>
+      </section>
+      <section class="main-section" id="attributeModifier">
+        <header>attributeModifier</header>
+        <p>A modifier based off hidden attributes assigned to various servants. Essentially, it's a modifier that varies between 0.9x, 1x, or 1.1x. More information can be found <a href="https://fategrandorder.fandom.com/wiki/Attributes">here</a>. For our example, we will assume a neutral modifier of 1.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * randomModifier * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="randomModifier">
+        <header>randomModifier</header>
+        <p>A completely random modifier from 0.9 to 1.1.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + atkMod - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="atkMod">
+        <header>atkMod</header>
+        <p>Any buff that increases attack. Most common attack buffs are from servants like Waver, Merlin, Artoria Caster, or Charisma skills. Note that this is NOT the same as Attack Bonus against specific enemies, or "Damage Plus". For our calculation, Fujino does not have any attack buffs on her own, so this will be 0.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - defMod) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="defMod">
+        <header>defMod</header>
+        <p>Any buff to the enemy that increases defense, commonly applied as enemy skills or permanent battle effects. This is NOT the same as "Special Resistance" which is a separate defensive modifier. For the sake of the calculations, we will assume an enemy with a 20% defense boost (0.2).<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * criticalModifier * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code>As can be seen in the formula, this value is directly subtracting from the atkMod value. Essentially, this means that if a player's Servant has a 30% attack buff, but the enemy has a 30% defense buff, both modifiers are essentially negated.</p>
+      </section>
+      <section class="main-section" id="criticalModifier">
+        <header>criticalModifier</header>
+        <p>If the card is a critical hit, it will be a modifier of 2, otherwise it is 1. NPs cannot crit.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * extraCardModifier * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="extraCardModifier">
+        <header>extraCardModifier</header>
+        <p>This value is 2 if it is the Extra card in a Brave Chain (all command cards selected are from the same Servant), 3.5 if all cards are from the same Servant AND the same color (3 arts cards, for example), or 1 in all other cases.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - specialDefMod) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="specialDefMod">
+        <header>specialDefMod</header>
+        <p>Special Defense modifiers mainly given through special battle effects or gimmicks. Normally indicated by the following icon:<img class="icon" src="https://static.wikia.nocookie.net/fategrandorder/images/c/c8/DmgResistUp.png" alt="DmgResistIcon"><code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + powerMod + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="powerMod">
+        <header>powerMod</header>
+        <p>All Event Craft Essences that boost damage for the entire event fall under this category. Also includes all modifiers that say "X% Power Up", or effects such as "Increases Quick Card Damage by 100%". For this case, no Power Mod will be applied.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + selfDamageMod + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="selfDamageMod">
+        <header>selfDamageMod</header>
+        <p>Currently unused.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (critDamageMod * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="critDamageMod">
+        <header>critDamageMod</header>
+        <p>All buffs that increase critical damage. NPs cannot crit. In our example, Fujino has a passive ability that grants her 11% critical damage permanently.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * isCrit) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="isCrit">
+        <header>isCrit</header>
+        <p>Whether or not the card has actually passed the critical hit check. This is 1 if the card crits and 0 if the card does not crit, negating any critical damage modifiers. NPs cannot crit.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (npDamageMod * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="npDamageMod">
+        <header>npDamageMod</header>
+        <p>Any buff or modifier that directly specifically buffs NP Damage/NP Strength. The most common Craft Essence that boosts this is The Black Grail, which gives 60% (base) or 80% (max limit break). Our equipped Craft Essence boosts NP damage by 15%, or 0.15.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * isNP)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="isNP">
+        <header>isNP</header>
+        <p>Whether or not the card is actually an NP. This is 1 if the card is an NP and 0 if the card is not, negating any NP damage modifiers.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((superEffectiveModifier - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="superEffectiveModifier">
+        <header>superEffectiveModifier</header>
+        <p>Any status on the NP or a skill that will increase the card or NP's damage vs. specific enemy types. For example, Fujino's NP is described as dealing more damage vs "Super Large" enemies. On <a href="https://fategrandorder.fandom.com/wiki/Asagami_Fujino">her page</a>, this is shown as <strong>"<img class="icon" src="https://static.wikia.nocookie.net/fategrandorder/images/f/f5/Powerup.png" alt="DmgIcon">vs. Super Large Extra Damage x"</strong>. It is an Overcharge effect, which is a separate mechanic. In our case, we will assume the enemy is a giant with the trait of "Super Large." It will be a regular overcharge assuming a NP gauge of 100%. Therefore, the modifier here will be 150%, or 1.5x.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * isSuperEffective)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="isSuperEffective">
+        <header>isSuperEffective</header>
+        <p>Whether or not the card is actually super effective (checks whether the enemy has a trait the Servant's attacks are described as being strong against). This is 1 if the card passes the check and 0 if the card does not, negating any special modifiers in the above section.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * <strong>1</strong>)}] + dmgPlusAdd + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="dmgPlusAdd">
+        <header>dmgPlusAdd</header>
+        <p>Also known as Flat Damage increases, these are buffs that increase damage by a specific value and NOT a percentage. These are <strong>NOT</strong> the same as Attack % buffs, which were described above. Examples of this include flat damage bonuses from Craft Essences such <a href="https://fategrandorder.fandom.com/wiki/Volumen_Hydrargyrum">Volumen Hydrargyrum</a>, which says <strong>"<img class="icon" src="https://static.wikia.nocookie.net/fategrandorder/images/f/f5/Powerup.png" alt="PowerUpIcon">Increases Damage by 200/500"</strong>. Other sources include Waver's Attack Buff that grants both an Attack % increase <strong>AND</strong> a Flat Damage increase.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * <strong>1</strong>)}] + <strong>0</strong> + selfDmgCutAdd + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="selfDmgCutAdd">
+        <header>selfDmgCutAdd</header>
+        <p>Same as the above but for defense. It is additively calculated with the above section, so identical values will essentially cancel each other out, just like Attack % and Defense % do.<code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * <strong>1</strong>)}] + <strong>0</strong> + <strong>0</strong> + (servantAtk * busterChainMod)</code></p>
+      </section>
+      <section class="main-section" id="busterChainMod">
+        <header>busterChainMod</header>
+        <p>This value is 0.2 if it's a Buster card in a Buster Chain, 0 otherwise. This is the reason why a full chain of triple buster cards does more damage than any other chain. Essentially in Buster Brave chain, (3 buster cards of the same servant), 20% of the Servant's Attack is added as additional damage. However, NPs do not benefit from this modifier. <code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * <strong>1</strong>)}] + <strong>0</strong> + <strong>0</strong> + (<strong>18641</strong> * <strong>0</strong>)</code></p>
+      </section>
+      <section class="main-section" id="Putting_It_All_Together">
+        <header>Putting It All Together</header>
+        <p>Our final damage formula with everything plugged in is as follows: <code>Card Damage = [<strong>18641</strong> * <strong>11.5</strong> * (<strong>0</strong> + (<strong>1.5</strong> * (1 + <strong>0.43</strong>))) * <strong>0.95</strong> * <strong>2</strong> * <strong>1</strong> * <strong>1.1</strong> * 0.23 * (1 + <strong>0</strong> - <strong>0.2</strong>) * <strong>1</strong> * <strong>1</strong> * (1 - <strong>0</strong>) * {1 + <strong>0</strong> + <strong>0</strong> + (<strong>0.11</strong> * <strong>0</strong>) + (<strong>0.15</strong> * <strong>1</strong>)} * {1 + ((<strong>1.5</strong> - 1) * <strong>1</strong>)}] + <strong>0</strong> + <strong>0</strong> + (<strong>18641</strong> * <strong>0</strong>)</code>Putting all of this into a calculator, we get a value of around <strong>305033.</strong> If we use a calculator such as <a href="https://maketakunai.github.io"> this NP damage Calculator</a>, we get a high range (remember the RNG associated with the randomModifier value) of <strong>304756</strong>, which is accurate to our calculations. Here are some additional things you can do to better understand the formula:
+<li>Try running your own calculations with your own servants to better understand the formula.</li>
+<li>Change different buffs around to see which types of buffs impact the final damage amount more. For example, which is more valuable, NP Damage % increases or Attack % increases? Think about how many servants have abilities that boost each.
+<li>Test the impact of critical damage by calculating whether it's better to boost critical damage to huge numbers, or if a 50% card color boost would be more impactful.</li>
+</p>
+      </section>
+    </main>
+    <footer>
+    </footer>
+  </body>
+</html>
